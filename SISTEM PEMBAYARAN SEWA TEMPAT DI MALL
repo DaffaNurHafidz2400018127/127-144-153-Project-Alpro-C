@@ -1,0 +1,220 @@
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <iomanip>
+
+using namespace std;
+
+// === KELOMPOK 1: LOGIN DAN ROLE ===
+unordered_map<string, string> adminAccounts = {
+    {"admin1", "adminpass"},
+    {"admin2", "admin123"}
+};
+
+unordered_map<string, string> userAccounts = {
+    {"user1", "userpass"},
+    {"user2", "user123"}
+};
+
+struct Penyewa {
+    string nama;
+    string noHp;
+    string brand;
+    int nomorKios;
+    int lantai;
+};
+
+struct Tempat {
+    int lantai;
+    int nomorKios;
+    int harga;
+    bool disewa;
+};
+
+vector<Penyewa> dataPenyewa;
+Tempat dataTempat[65];
+
+void pause() {
+    cout << "Tekan Enter untuk kembali ke menu...";
+    cin.ignore();
+    cin.get();
+}
+
+void inisialisasiTempat() {
+    int nomor = 1;
+    for (int i = 0; i < 65; ++i) {
+        int lantai = i / 13 + 1;
+        dataTempat[i] = {lantai, nomor, 1000000 + (i % 13) * 50000, false};
+        nomor++;
+    }
+
+    // Beberapa tempat sudah disewa
+    dataTempat[5].disewa = true;
+    dataTempat[10].disewa = true;
+    dataTempat[22].disewa = true;
+    dataTempat[34].disewa = true;
+    dataTempat[60].disewa = true;
+
+    dataPenyewa.push_back({"Budi", "08123456789", "BudiStore", dataTempat[5].nomorKios, dataTempat[5].lantai});
+    dataPenyewa.push_back({"Sari", "08987654321", "SariFashion", dataTempat[10].nomorKios, dataTempat[10].lantai});
+    dataPenyewa.push_back({"Rudi", "0877888999", "RudiMart", dataTempat[22].nomorKios, dataTempat[22].lantai});
+    dataPenyewa.push_back({"Tina", "08223334444", "TinaBakery", dataTempat[34].nomorKios, dataTempat[34].lantai});
+    dataPenyewa.push_back({"Doni", "0811333555", "DoniElectro", dataTempat[60].nomorKios, dataTempat[60].lantai});
+}
+
+string login(string &role) {
+    string username, password;
+    while (true) {
+        cout << "\n--- Login ---" << endl;
+        cout << "Masukkan username: ";
+        cin >> username;
+        cout << "Masukkan password: ";
+        cin >> password;
+
+        if (adminAccounts.count(username) && adminAccounts[username] == password) {
+            role = "admin";
+            cout << "Login sebagai admin berhasil.\n";
+            return username;
+        } else if (userAccounts.count(username) && userAccounts[username] == password) {
+            role = "pengguna";
+            cout << "Login sebagai pengguna berhasil.\n";
+            return username;
+        } else {
+            cout << "Username atau password salah. Silakan coba lagi.\n";
+        }
+    }
+}
+
+void tampilkanDataTempat() {
+    cout << "\nDaftar Semua Tempat:\n";
+    cout << left << setw(10) << "Lantai" << setw(15) << "Nomor Kios" << setw(15) << "Harga" << "Status" << endl;
+    for (const auto& tempat : dataTempat) {
+        cout << left << setw(10) << tempat.lantai
+             << setw(15) << tempat.nomorKios
+             << setw(15) << tempat.harga
+             << (tempat.disewa ? "Disewa" : "  -   ") << endl;
+    }
+    pause();
+}
+
+void tambahPenyewa() {
+    Penyewa penyewa;
+    cout << "\n--- Tambah Data Penyewa ---\n";
+    cout << "Nama: "; cin.ignore(); getline(cin, penyewa.nama);
+    cout << "No HP: "; getline(cin, penyewa.noHp);
+    cout << "Brand: "; getline(cin, penyewa.brand);
+
+    int lantai;
+    cout << "Pilih lantai (1-5): "; cin >> lantai;
+
+    cout << "Nomor kios yang tersedia di lantai " << lantai << ": ";
+    for (int i = 0; i < 65; ++i) {
+        if (dataTempat[i].lantai == lantai && !dataTempat[i].disewa) {
+            cout << dataTempat[i].nomorKios << " ";
+        }
+    }
+    cout << endl;
+    cout << "Pilih nomor kios: "; cin >> penyewa.nomorKios;
+
+    penyewa.lantai = lantai;
+
+    for (int i = 0; i < 65; ++i) {
+        if (dataTempat[i].nomorKios == penyewa.nomorKios && dataTempat[i].lantai == penyewa.lantai) {
+            dataTempat[i].disewa = true;
+            break;
+        }
+    }
+
+    dataPenyewa.push_back(penyewa);
+    cout << "Data penyewa berhasil ditambahkan!\n";
+    pause();
+}
+
+void lihatDataPenyewa() {
+    cout << "\nData Penyewa:\n";
+    for (const auto& p : dataPenyewa) {
+        cout << "Nama: " << p.nama << ", No HP: " << p.noHp << ", Brand: " << p.brand
+             << ", Lantai: " << p.lantai << ", Kios: " << p.nomorKios << endl;
+    }
+    pause();
+}
+
+void adminMenu(const string& username) {
+    int pilihan;
+    do {
+        cout << "\n[Admin: " << username << "] Menu Admin:\n";
+        cout << "1. Lihat data penyewa\n";
+        cout << "2. Tambah data penyewa\n";
+        cout << "3. Lihat daftar semua tempat\n";
+        cout << "4. Logout\n";
+        cout << "Pilihan: ";
+        cin >> pilihan;
+        cin.ignore();
+
+        switch (pilihan) {
+            case 1:
+                lihatDataPenyewa();
+                break;
+            case 2:
+                tambahPenyewa();
+                break;
+            case 3:
+                tampilkanDataTempat();
+                break;
+            case 4:
+                cout << "Logout berhasil.\n";
+                return;
+            default:
+                cout << "Pilihan tidak valid.\n";
+                pause();
+        }
+    } while (true);
+}
+
+void userMenu(const string& username) {
+    int pilihan;
+    do {
+        cout << "\n[Pengguna: " << username << "] Menu Pengguna:\n";
+        cout << "1. Lihat tagihan sewa\n";
+        cout << "2. Bayar sewa\n";
+        cout << "3. Logout\n";
+        cout << "Pilihan: ";
+        cin >> pilihan;
+        cin.ignore();
+
+        switch (pilihan) {
+            case 1:
+                cout << "Menampilkan tagihan sewa...\n";
+                pause();
+                break;
+            case 2:
+                cout << "Melakukan pembayaran sewa...\n";
+                pause();
+                break;
+            case 3:
+                cout << "Logout berhasil.\n";
+                return;
+            default:
+                cout << "Pilihan tidak valid.\n";
+                pause();
+        }
+    } while (true);
+}
+
+int main() {
+    string role, username;
+    inisialisasiTempat();
+
+    while (true) {
+        username = login(role);
+
+        if (role == "admin") {
+            adminMenu(username);
+        } else if (role == "pengguna") {
+            userMenu(username);
+        }
+    }
+
+    return 0;
+}
