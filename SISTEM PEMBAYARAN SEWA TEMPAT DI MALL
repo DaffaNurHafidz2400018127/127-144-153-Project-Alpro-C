@@ -3,18 +3,22 @@
 #include <unordered_map>
 #include <vector>
 #include <iomanip>
+#include <ctime>
+#include <fstream>
 
 using namespace std;
 
-// === KELOMPOK 1: LOGIN DAN ROLE ===
 unordered_map<string, string> adminAccounts = {
     {"admin1", "adminpass"},
     {"admin2", "admin123"}
 };
 
 unordered_map<string, string> userAccounts = {
-    {"user1", "userpass"},
-    {"user2", "user123"}
+    {"Budi", "userpass"},
+    {"Sari", "user123"},
+    {"Rudi", "Rudi02"},
+    {"Tina", "Tina03"},
+    {"Doni", "Doni04"},
 };
 
 struct Penyewa {
@@ -23,6 +27,9 @@ struct Penyewa {
     string brand;
     int nomorKios;
     int lantai;
+    string tanggalMulai;
+    vector<string> bulanDibayar;
+    unordered_map<string, string> historiPembayaran; // bulan -> tanggal bayar (YYYY-MM-DD)
 };
 
 struct Tempat {
@@ -49,39 +56,60 @@ void inisialisasiTempat() {
         nomor++;
     }
 
-    // Beberapa tempat sudah disewa
     dataTempat[5].disewa = true;
     dataTempat[10].disewa = true;
     dataTempat[22].disewa = true;
     dataTempat[34].disewa = true;
     dataTempat[60].disewa = true;
 
-    dataPenyewa.push_back({"Budi", "08123456789", "BudiStore", dataTempat[5].nomorKios, dataTempat[5].lantai});
-    dataPenyewa.push_back({"Sari", "08987654321", "SariFashion", dataTempat[10].nomorKios, dataTempat[10].lantai});
-    dataPenyewa.push_back({"Rudi", "0877888999", "RudiMart", dataTempat[22].nomorKios, dataTempat[22].lantai});
-    dataPenyewa.push_back({"Tina", "08223334444", "TinaBakery", dataTempat[34].nomorKios, dataTempat[34].lantai});
-    dataPenyewa.push_back({"Doni", "0811333555", "DoniElectro", dataTempat[60].nomorKios, dataTempat[60].lantai});
+    dataPenyewa.push_back({"Budi", "08123456789", "BudiStore", dataTempat[5].nomorKios, dataTempat[5].lantai, "1 Januari 2025", {"Januari 2025"}, {{"Januari 2025", "2025-01-01"}}});
+    dataPenyewa.push_back({"Sari", "08987654321", "SariFashion", dataTempat[10].nomorKios, dataTempat[10].lantai, "1 Januari 2025", {"Januari 2025"}, {{"Januari 2025", "2025-01-01"}}});
+    dataPenyewa.push_back({"Rudi", "0877888999", "RudiMart", dataTempat[22].nomorKios, dataTempat[22].lantai, "1 Januari 2025", {"Januari 2025"}, {{"Januari 2025", "2025-01-01"}}});
+    dataPenyewa.push_back({"Tina", "08223334444", "TinaBakery", dataTempat[34].nomorKios, dataTempat[34].lantai, "1 Januari 2025", {"Januari 2025"}, {{"Januari 2025", "2025-01-01"}}});
+    dataPenyewa.push_back({"Doni", "0811333555", "DoniElectro", dataTempat[60].nomorKios, dataTempat[60].lantai, "1 Januari 2025", {"Januari 2025"}, {{"Januari 2025", "2025-01-01"}}});
 }
 
-string login(string &role) {
+bool sudahDibayar(const Penyewa& penyewa, const string& bulan) {
+    for (const auto& b : penyewa.bulanDibayar) {
+        if (b == bulan) return true;
+    }
+    return false;
+}
+
+string login(string& role) {
     string username, password;
     while (true) {
-        cout << "\n--- Login ---" << endl;
-        cout << "Masukkan username: ";
-        cin >> username;
-        cout << "Masukkan password: ";
-        cin >> password;
+        cout << "\n--- Menu Login ---\n";
+        cout << "1. Login sebagai Admin\n";
+        cout << "2. Login sebagai Pengguna\n";
+        cout << "3. Buat Akun\n";
+        cout << "Pilihan: ";
+        int pilihan;
+        cin >> pilihan;
 
-        if (adminAccounts.count(username) && adminAccounts[username] == password) {
-            role = "admin";
-            cout << "Login sebagai admin berhasil.\n";
-            return username;
-        } else if (userAccounts.count(username) && userAccounts[username] == password) {
-            role = "pengguna";
-            cout << "Login sebagai pengguna berhasil.\n";
-            return username;
-        } else {
-            cout << "Username atau password salah. Silakan coba lagi.\n";
+        if (pilihan == 3) {
+            cout << "\n--- Buat Akun Pengguna ---\n";
+            cout << "Masukkan username: ";
+            cin >> username;
+            cout << "Masukkan password: ";
+            cin >> password;
+            userAccounts[username] = password;
+            cout << "Akun berhasil dibuat. Silakan login.\n";
+            continue;
+        }
+
+        cout << "Masukkan username: "; cin >> username;
+        cout << "Masukkan password: "; cin >> password;
+
+        if (pilihan == 1 && adminAccounts.count(username) && adminAccounts[username] == password) {
+		    role = "admin";
+		    catatLogLogin(username, role);
+		    return username;
+		} else if (pilihan == 2 && userAccounts.count(username) && userAccounts[username] == password) {
+			    role = "pengguna";
+			    catatLogLogin(username, role);
+			    return username;
+			}
         }
     }
 }
@@ -93,7 +121,17 @@ void tampilkanDataTempat() {
         cout << left << setw(10) << tempat.lantai
              << setw(15) << tempat.nomorKios
              << setw(15) << tempat.harga
-             << (tempat.disewa ? "Disewa" : "  -   ") << endl;
+             << (tempat.disewa ? "Disewa" : "Kosong") << endl;
+    }
+    pause();
+}
+
+void lihatRukoKosong() {
+    cout << "\n--- Daftar Ruko Kosong ---\n";
+    for (const auto& t : dataTempat) {
+        if (!t.disewa) {
+            cout << "Lantai: " << t.lantai << ", Kios: " << t.nomorKios << ", Harga: Rp " << t.harga << endl;
+        }
     }
     pause();
 }
@@ -101,9 +139,11 @@ void tampilkanDataTempat() {
 void tambahPenyewa() {
     Penyewa penyewa;
     cout << "\n--- Tambah Data Penyewa ---\n";
-    cout << "Nama: "; cin.ignore(); getline(cin, penyewa.nama);
+    cin.ignore();
+    cout << "Nama: "; getline(cin, penyewa.nama);
     cout << "No HP: "; getline(cin, penyewa.noHp);
     cout << "Brand: "; getline(cin, penyewa.brand);
+    cout << "Tanggal mulai sewa (cth: 1 Juni 2025): "; getline(cin, penyewa.tanggalMulai);
 
     int lantai;
     cout << "Pilih lantai (1-5): "; cin >> lantai;
@@ -114,8 +154,7 @@ void tambahPenyewa() {
             cout << dataTempat[i].nomorKios << " ";
         }
     }
-    cout << endl;
-    cout << "Pilih nomor kios: "; cin >> penyewa.nomorKios;
+    cout << "\nPilih nomor kios: "; cin >> penyewa.nomorKios;
 
     penyewa.lantai = lantai;
 
@@ -131,90 +170,681 @@ void tambahPenyewa() {
     pause();
 }
 
-void lihatDataPenyewa() {
-    cout << "\nData Penyewa:\n";
+void riwayatPembayaran(const string& username) {
+    cout << "\n--- Riwayat Pembayaran ---\n";
+    
     for (const auto& p : dataPenyewa) {
-        cout << "Nama: " << p.nama << ", No HP: " << p.noHp << ", Brand: " << p.brand
-             << ", Lantai: " << p.lantai << ", Kios: " << p.nomorKios << endl;
+        if (p.nama == username) {
+            cout << "Nama       : " << p.nama << endl;
+            cout << "Brand      : " << p.brand << endl;
+            cout << "Lantai     : " << p.lantai << endl;
+            cout << "Kios       : " << p.nomorKios << endl;
+            cout << "Tanggal Mulai Sewa: " << p.tanggalMulai << endl;
+            cout << "Bulan yang sudah dibayar:\n";
+            if (p.bulanDibayar.empty()) cout << "- Belum ada pembayaran\n";
+            else for (const auto& b : p.bulanDibayar) cout << "- " << b << endl;
+            pause();
+            return;
+        }
+    }
+    cout << "Data penyewa tidak ditemukan.\n";
+    pause();
+}
+
+// Fungsi bantu untuk cek tanggal hari ini dalam format YYYY-MM-DD
+string tanggalHariIni() {
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+    char buf[11];
+    snprintf(buf, sizeof(buf), "%04d-%02d-%02d",
+        1900 + ltm->tm_year, 1 + ltm->tm_mon, ltm->tm_mday);
+    return string(buf);
+}
+
+// Hitung denda keterlambatan: tenggat tgl 10, denda 50k per hari
+int hitungDenda(const string& tanggalBayar) {
+    int dendaPerHari = 50000;
+    // Ambil tanggal bayar dari YYYY-MM-DD
+    int tahun, bulan, tanggal;
+    sscanf(tanggalBayar.c_str(), "%d-%d-%d", &tahun, &bulan, &tanggal);
+
+    int batasTanggal = 10;
+
+    if (tanggal <= batasTanggal) return 0; // bayar tepat waktu
+
+    int hariTerlambat = tanggal - batasTanggal;
+    return hariTerlambat * dendaPerHari;
+}
+
+// Generate kode transaksi unik: nama+bulan+timestamp
+string generateKodeTransaksi(const string& nama, const string& bulan) {
+    time_t now = time(0);
+    return nama + "-" + bulan + "-" + to_string(now);
+}
+
+// Fungsi simpan struk pembayaran ke file
+void simpanStrukPembayaran(const Penyewa& p, const string& bulan, const string& tanggalBayar, int harga, int denda, int total, const string& metode, const string& kode) {
+	ofstream file("struk_pembayaran.txt", ios::app);
+	file << "========================================\n";
+	file << " STRUK PEMBAYARAN SEWA \n";
+	file << "========================================\n";
+	file << "Nama Penyewa : " << p.nama << endl;
+	file << "Brand : " << p.brand << endl;
+	file << "Lantai / Kios : " << p.lantai << " / " << p.nomorKios << endl;
+	file << "Bulan Dibayar : " << bulan << endl;
+	file << "Tanggal Bayar : " << tanggalBayar << endl;
+	file << "Metode : " << metode << endl;
+	file << "Harga Sewa : Rp " << harga << endl;
+	file << "Denda : Rp " << denda << endl;
+	file << "Total Dibayar : Rp " << total << endl;
+	file << "Kode Transaksi : " << kode << endl;
+	file << "========================================\n\n";
+	file.close();
+}
+
+void bayarSewa(string username) {
+	cout << "\n--- Pembayaran Sewa ---\n";
+	
+	for (auto& p : dataPenyewa) {
+	if (p.nama == username) {
+	for (const auto& t : dataTempat) {
+	if (t.nomorKios == p.nomorKios && t.lantai == p.lantai) {
+	
+	cout << "Nama : " << p.nama << endl;
+	cout << "Brand : " << p.brand << endl;
+	cout << "Lantai : " << p.lantai << endl;
+	cout << "Kios : " << p.nomorKios << endl;
+	cout << "Harga : Rp " << t.harga << " /bulan\n";
+    cout << "\nHistori Pembayaran:\n";
+    if (p.historiPembayaran.empty()) {
+	    cout << "- Belum ada pembayaran sebelumnya.\n";
+	        } else {
+	            for (auto& hp : p.historiPembayaran) {
+	                int denda = hitungDenda(hp.second);
+	                cout << "- Bulan: " << hp.first << ", Tanggal bayar: " << hp.second<< ", Denda: Rp " << denda << endl;
+	            }
+	        }
+	string bulan;
+    cout << "\nMasukkan bulan pembayaran (cth: Juni 2025): ";
+    cin.ignore(); 
+	getline(cin, bulan);
+
+     if (sudahDibayar(p, bulan)) {
+        cout << "Anda sudah membayar untuk bulan ini.\n";
+        pause();
+        return;
+    }
+
+                cout << "\nPilih metode pembayaran:\n";
+                cout << "1. E-wallet\n";
+                cout << "2. Transfer Bank\n";
+                cout << "Pilihan: ";
+                int metodeInput;
+                cin >> metodeInput;
+
+                string metode = (metodeInput == 1) ? "E-wallet" : "Transfer Bank";
+
+                string tanggalBayar = tanggalHariIni();
+                int denda = hitungDenda(tanggalBayar);
+                int totalBayar = t.harga + denda;
+
+                cout << "\nDetail Pembayaran:\n";
+                cout << "Harga sewa   : Rp " << t.harga << endl;
+                cout << "Denda        : Rp " << denda << endl;
+                cout << "Total bayar  : Rp " << totalBayar << endl;
+
+                string kodeTransaksi = generateKodeTransaksi(p.nama, bulan);
+                cout << "Kode Transaksi: " << kodeTransaksi << endl;
+
+                p.bulanDibayar.push_back(bulan);
+                p.historiPembayaran[bulan] = tanggalBayar;
+
+                simpanStrukPembayaran(p, bulan, tanggalBayar, t.harga, denda, totalBayar, metode, kodeTransaksi);
+
+                cout << "\nPembayaran berhasil. Struk disimpan ke file.\n";
+                pause();
+                return;
+            }
+        }
+    }
+}
+cout << "Data penyewa tidak ditemukan.\n";
+pause();
+}
+
+string getBulanTahunSekarang() {
+	
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+    string namaBulan[] = {"Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"};
+    return namaBulan[ltm->tm_mon] + string(" ") + to_string(1900 + ltm->tm_year);
+}
+
+void catatLogLogin(const string& username, const string& role) {
+	
+    ofstream file("log_login.txt", ios::app);
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+    char waktu[20];
+    snprintf(waktu, sizeof(waktu), "%04d-%02d-%02d %02d:%02d:%02d",
+        1900 + ltm->tm_year, 1 + ltm->tm_mon, ltm->tm_mday,
+        ltm->tm_hour, ltm->tm_min, ltm->tm_sec);
+    file << "[" << waktu << "] " << role << " '" << username << "' berhasil login\n";
+    file.close();
+   
+}
+
+void laporanPembayaranPenyewa() {
+	
+    cout << "\n--- Laporan Pembayaran Semua Penyewa ---\n";
+    for (const auto& p : dataPenyewa) {
+        cout << "Nama       : " << p.nama << endl;
+        cout << "Brand      : " << p.brand << endl;
+        cout << "Lantai/Kios: " << p.lantai << " / " << p.nomorKios << endl;
+        if (p.bulanDibayar.empty()) {
+            cout << "- Belum ada pembayaran\n";
+        } else {
+            int totalPembayaran = 0;
+            for (const auto& bulan : p.bulanDibayar) {
+                string tanggalBayar = p.historiPembayaran.at(bulan);
+                int denda = hitungDenda(tanggalBayar);
+                int hargaSewa = 0;
+                for (const auto& t : dataTempat) {
+                    if (t.nomorKios == p.nomorKios && t.lantai == p.lantai) {
+                        hargaSewa = t.harga;
+                        break;
+                    }
+                }
+                int total = hargaSewa + denda;
+                totalPembayaran += total;
+                cout << "- Bulan: " << bulan << ", Tanggal bayar: " << tanggalBayar
+                     << ", Harga: Rp " << hargaSewa
+                     << ", Denda: Rp " << denda
+                     << ", Total: Rp " << total << endl;
+            }
+            cout << "Total Pembayaran Keseluruhan: Rp " << totalPembayaran << endl;
+        }
+        cout << "----------------------------------------\n";
     }
     pause();
 }
 
-void adminMenu(const string& username) {
-    int pilihan;
-    do {
-        cout << "\n[Admin: " << username << "] Menu Admin:\n";
-        cout << "1. Lihat data penyewa\n";
-        cout << "2. Tambah data penyewa\n";
-        cout << "3. Lihat daftar semua tempat\n";
-        cout << "4. Logout\n";
-        cout << "Pilihan: ";
-        cin >> pilihan;
-        cin.ignore();
+void updateDataPenyewa() {
+	
+    cout << "\n--- Update Data Penyewa ---\n";
+    cin.ignore();
+    cout << "Masukkan nama penyewa yang ingin diupdate: ";
+    string namaCari;
+    getline(cin, namaCari);
 
-        switch (pilihan) {
-            case 1:
-                lihatDataPenyewa();
-                break;
-            case 2:
-                tambahPenyewa();
-                break;
-            case 3:
-                tampilkanDataTempat();
-                break;
-            case 4:
-                cout << "Logout berhasil.\n";
-                return;
-            default:
-                cout << "Pilihan tidak valid.\n";
-                pause();
+    for (auto& p : dataPenyewa) {
+        if (p.nama == namaCari) {
+            cout << "Data ditemukan. Isi data baru (kosongkan jika tidak ingin diubah):\n";
+
+            cout << "Nama (" << p.nama << "): ";
+            string input;
+            getline(cin, input);
+            if (!input.empty()) p.nama = input;
+
+            cout << "No HP (" << p.noHp << "): ";
+            getline(cin, input);
+            if (!input.empty()) p.noHp = input;
+
+            cout << "Brand (" << p.brand << "): ";
+            getline(cin, input);
+            if (!input.empty()) p.brand = input;
+
+            cout << "Lantai (" << p.lantai << "): ";
+            getline(cin, input);
+            if (!input.empty()) {
+                int lantaiBaru = stoi(input);
+
+                // Set tempat lama jadi kosong
+                for (auto& t : dataTempat) {
+                    if (t.nomorKios == p.nomorKios && t.lantai == p.lantai) {
+                        t.disewa = false;
+                        break;
+                    }
+                }
+
+                // Tampilkan kios kosong di lantai baru
+                cout << "Nomor kios yang tersedia di lantai " << lantaiBaru << ": ";
+                for (const auto& t : dataTempat) {
+                    if (t.lantai == lantaiBaru && !t.disewa) cout << t.nomorKios << " ";
+                }
+                cout << "\nPilih nomor kios baru: ";
+                string kiosInput;
+                getline(cin, kiosInput);
+                int kiosBaru = stoi(kiosInput);
+
+                // Update kios dan lantai baru, set tempat disewa
+                for (auto& t : dataTempat) {
+                    if (t.nomorKios == kiosBaru && t.lantai == lantaiBaru) {
+                        t.disewa = true;
+                        break;
+                    }
+                }
+                p.lantai = lantaiBaru;
+                p.nomorKios = kiosBaru;
+            }
+
+            cout << "Data penyewa berhasil diupdate.\n";
+            pause();
+            return;
         }
-    } while (true);
+    }
+    cout << "Data penyewa tidak ditemukan.\n";
+    pause();
+    
 }
 
-void userMenu(const string& username) {
-    int pilihan;
-    do {
-        cout << "\n[Pengguna: " << username << "] Menu Pengguna:\n";
-        cout << "1. Lihat tagihan sewa\n";
-        cout << "2. Bayar sewa\n";
-        cout << "3. Logout\n";
-        cout << "Pilihan: ";
-        cin >> pilihan;
-        cin.ignore();
+void reminderPembayaran() {
+	
+    cout << "\n--- Reminder Pembayaran ---\n";
+    cin.ignore();
+    cout << "Masukkan bulan yang ingin dicek (cth: Juni 2025): ";
+    string bulanCek;
+    getline(cin, bulanCek);
 
-        switch (pilihan) {
-            case 1:
-                cout << "Menampilkan tagihan sewa...\n";
-                pause();
-                break;
-            case 2:
-                cout << "Melakukan pembayaran sewa...\n";
-                pause();
-                break;
-            case 3:
-                cout << "Logout berhasil.\n";
-                return;
-            default:
-                cout << "Pilihan tidak valid.\n";
-                pause();
+    bool adaYangBelumBayar = false;
+    cout << "\nPenyewa yang belum membayar bulan " << bulanCek << ":\n";
+
+    for (const auto& p : dataPenyewa) {
+        if (!sudahDibayar(p, bulanCek)) {
+            cout << "- " << p.nama << ", Brand: " << p.brand << ", Lantai: " << p.lantai << ", Kios: " << p.nomorKios << endl;
+            adaYangBelumBayar = true;
         }
-    } while (true);
+    }
+
+    if (!adaYangBelumBayar) {
+        cout << "Semua penyewa sudah membayar bulan " << bulanCek << ".\n";
+    }
+    pause();
+}
+
+void sewaTempatPengguna(const string& username) {
+	
+    cout << "\n--- Sewa Tempat ---\n";
+    cout << "Pilih lantai (1-5): ";
+    int lantaiPilih;
+    cin >> lantaiPilih;
+
+    cout << "Kios kosong di lantai " << lantaiPilih << ":\n";
+    vector<int> kiosTersedia;
+    for (const auto& tempat : dataTempat) {
+        if (tempat.lantai == lantaiPilih && !tempat.disewa) {
+            cout << "- Kios nomor " << tempat.nomorKios << " (Harga: Rp " << tempat.harga << ")\n";
+            kiosTersedia.push_back(tempat.nomorKios);
+        }
+    }
+
+    if (kiosTersedia.empty()) {
+        cout << "Maaf, tidak ada kios kosong di lantai ini.\n";
+        pause();
+        return;
+    }
+
+    cout << "Pilih nomor kios yang ingin disewa: ";
+    int kiosPilih;
+    cin >> kiosPilih;
+
+    bool validKios = false;
+    for (int k : kiosTersedia) {
+        if (k == kiosPilih) {
+            validKios = true;
+            break;
+        }
+    }
+
+    if (!validKios) {
+        cout << "Nomor kios tidak valid atau sudah disewa.\n";
+        pause();
+        return;
+    }
+
+    cin.ignore();
+    
+    cout << "Masukkan nama brand Anda: ";
+    string brandInput;
+    getline(cin, brandInput);
+
+    cout << "Masukkan tanggal mulai sewa (cth: 1 Juni 2025): ";
+    string tanggalMulaiInput;
+    getline(cin, tanggalMulaiInput);
+
+    // Update status kios jadi disewa
+    for (auto& tempat : dataTempat) {
+        if (tempat.nomorKios == kiosPilih && tempat.lantai == lantaiPilih) {
+            tempat.disewa = true;
+            break;
+        }
+    }
+
+    // Tambah data penyewa baru
+    Penyewa penyewaBaru;
+    penyewaBaru.nama = username;
+    penyewaBaru.noHp = "-"; // bisa dikosongkan atau ditambahkan fitur edit data user terpisah
+    penyewaBaru.brand = brandInput;
+    penyewaBaru.nomorKios = kiosPilih;
+    penyewaBaru.lantai = lantaiPilih;
+    penyewaBaru.tanggalMulai = tanggalMulaiInput;
+
+    dataPenyewa.push_back(penyewaBaru);
+
+    cout << "Selamat! Anda berhasil menyewa kios nomor " << kiosPilih << " di lantai " << lantaiPilih << ".\n";
+    pause();
+}
+
+struct Laporan {
+    string pengirim;
+    string isi;
+    string tanggal;
+    string balasan;
+    bool sudahDibalas;
+};
+
+vector<Laporan> daftarLaporan;
+
+void kirimLaporan(const string& username) {
+	
+    cin.ignore();
+    Laporan laporan;
+    laporan.pengirim = username;
+    cout << "\n--- Kirim Laporan / Komplain ---\n";
+    cout << "Tulis isi laporan/pertanyaan Anda:\n> ";
+    getline(cin, laporan.isi);
+    
+    laporan.tanggal = tanggalHariIni();
+    laporan.balasan = "-";
+    laporan.sudahDibalas = false;
+
+    daftarLaporan.push_back(laporan);
+    cout << "Laporan berhasil dikirim ke admin.\n";
+    pause();
+}
+
+void tinjauLaporanAdmin() {
+	
+    cout << "\n--- Daftar Laporan Masuk ---\n";
+    if (daftarLaporan.empty()) {
+        cout << "Belum ada laporan dari pengguna.\n";
+        pause();
+        return;
+    }
+
+    for (size_t i = 0; i < daftarLaporan.size(); ++i) {
+        const auto& l = daftarLaporan[i];
+        cout << "\n[" << i + 1 << "] Dari: " << l.pengirim << " | Tanggal: " << l.tanggal << endl;
+        cout << "Isi     : " << l.isi << endl;
+        cout << "Status  : " << (l.sudahDibalas ? "Sudah dibalas" : "Belum dibalas") << endl;
+        if (l.sudahDibalas) {
+            cout << "Balasan : " << l.balasan << endl;
+        }
+    }
+
+    cout << "\nMasukkan nomor laporan yang ingin dibalas (0 untuk kembali): ";
+    int pilih;
+    cin >> pilih;
+
+    if (pilih < 1 || pilih > (int)daftarLaporan.size()) {
+        cout << "Kembali ke menu admin.\n";
+        pause();
+        return;
+    }
+
+    Laporan& laporanDipilih = daftarLaporan[pilih - 1];
+    if (laporanDipilih.sudahDibalas) {
+        cout << "Laporan ini sudah dibalas.\n";
+        pause();
+        return;
+    }
+
+    cin.ignore();
+    cout << "Tulis balasan Anda:\n> ";
+    getline(cin, laporanDipilih.balasan);
+    laporanDipilih.sudahDibalas = true;
+    cout << "Balasan telah dikirim ke pengguna.\n";
+    pause();
+}
+
+void lihatBalasanLaporan(const string& username) {
+    cout << "\n--- Balasan Laporan Anda ---\n";
+    bool ada = false;
+    for (const auto& l : daftarLaporan) {
+        if (l.pengirim == username) {
+            ada = true;
+            cout << "\nTanggal: " << l.tanggal << "\nIsi: " << l.isi << endl;
+            cout << "Balasan: " << (l.sudahDibalas ? l.balasan : "(Belum dibalas)") << endl;
+        }
+    }
+    if (!ada) cout << "Belum ada laporan yang dikirim.\n";
+    pause();
+}
+
+void cariPenyewa() {
+    cout << "\n--- Cari Penyewa ---\n";
+    cout << "Cari berdasarkan:\n";
+    cout << "1. Nama Penyewa\n";
+    cout << "2. Brand\n";
+    cout << "3. Nomor Kios\n";
+    cout << "Pilihan: ";
+    int opsi;
+    cin >> opsi;
+    cin.ignore();
+
+    bool ditemukan = false;
+
+    if (opsi == 1) {
+        string nama;
+        
+        cout << "Masukkan nama penyewa: ";
+        getline(cin, nama);
+        for (const auto& p : dataPenyewa) {
+            if (p.nama == nama) {
+                cout << "\nNama     : " << p.nama << "\nBrand    : " << p.brand
+                     << "\nNo. HP   : " << p.noHp << "\nLantai   : " << p.lantai
+                     << "\nKios     : " << p.nomorKios << "\nTanggal Mulai: " << p.tanggalMulai << endl;
+                ditemukan = true;
+            }
+        }
+    } else if (opsi == 2) {
+        string brand;
+        
+        cout << "Masukkan nama brand: ";
+        getline(cin, brand);
+        for (const auto& p : dataPenyewa) {
+            if (p.brand == brand) {
+                cout << "\nNama     : " << p.nama << "\nBrand    : " << p.brand
+                     << "\nNo. HP   : " << p.noHp << "\nLantai   : " << p.lantai
+                     << "\nKios     : " << p.nomorKios << "\nTanggal Mulai: " << p.tanggalMulai << endl;
+                ditemukan = true;
+            }
+        }
+    } else if (opsi == 3) {
+        int nomor;
+        
+        cout << "Masukkan nomor kios: ";
+        cin >> nomor;
+        
+        for (const auto& p : dataPenyewa) {
+            if (p.nomorKios == nomor) {
+                cout << "\nNama     : " << p.nama << "\nBrand    : " << p.brand
+                     << "\nNo. HP   : " << p.noHp << "\nLantai   : " << p.lantai
+                     << "\nKios     : " << p.nomorKios << "\nTanggal Mulai: " << p.tanggalMulai << endl;
+                ditemukan = true;
+            }
+        }
+    } else {
+        cout << "Pilihan tidak valid.\n";
+        return;
+    }
+
+    if (!ditemukan) {
+        cout << "Data penyewa tidak ditemukan.\n";
+    }
+
+    pause();
+}
+
+string namaBulanTahunSekarang() {
+	
+    time_t now = time(0);
+    tm* ltm = localtime(&now);
+    string namaBulan[] = {"Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                          "Juli", "Agustus", "September", "Oktober", "November", "Desember"};
+    string bulan = namaBulan[ltm->tm_mon];
+    int tahun = 1900 + ltm->tm_year;
+    return bulan + " " + to_string(tahun);
+    
+}
+
+void penyewaBelumBayarBulanIni() {
+	
+    string bulanIni = namaBulanTahunSekarang();
+    cout << "\n--- Penyewa yang Belum Membayar Bulan " << bulanIni << " ---\n";
+
+    bool ada = false;
+    for (const auto& p : dataPenyewa) {
+        if (!sudahDibayar(p, bulanIni)) {
+            cout << "Nama     : " << p.nama << endl;
+            cout << "Brand    : " << p.brand << endl;
+            cout << "Lantai   : " << p.lantai << ", Kios: " << p.nomorKios << endl;
+            cout << "Tanggal Mulai Sewa: " << p.tanggalMulai << endl;
+            cout << "--------------------------------------\n";
+            ada = true;
+            
+        }
+    }
+
+    if (!ada) {
+        cout << "Semua penyewa sudah membayar bulan ini.\n";
+    }
+
+    pause();
 }
 
 int main() {
-    string role, username;
+	
     inisialisasiTempat();
-
-    while (true) {
-        username = login(role);
+    string role, username;
+    username = login(role);
+    int pilihan;
+    
+    do {
+        cout << "\n--- Sistem Pembayaran Sewa Tempat ---\n";
+        cout << "1. Lihat Daftar Tempat\n";
+        
+        if (role == "admin") {
+        	
+            cout << "2. Tambah Penyewa\n";
+            cout << "3. Lihat Ruko Kosong\n";
+            cout << "4. Laporan Pembayaran Penyewa\n";
+            cout << "5. Update Data Penyewa\n";
+            cout << "6. Reminder Pembayaran\n";
+            cout << "7. Tinjau Laporan Pengguna\n";
+            cout << "8. Cari Data Penyewa\n";
+            cout << "9. Lihat Penyewa Belum Bayar Bulan Ini\n";
+            cout << "0. Keluar\n";
+            
+        } else {
+        	
+            cout << "2. Bayar Sewa\n";
+            cout << "3. Lihat Riwayat Pembayaran\n";
+            cout << "4. Sewa Tempat\n";
+            cout << "5. Kirim Laporan \n";
+			cout << "6. Lihat Balasan Laporan\n";
+            cout << "0. Keluar\n";
+            
+        }
+        cout << "Pilihan: ";
+        cin >> pilihan;
 
         if (role == "admin") {
-            adminMenu(username);
-        } else if (role == "pengguna") {
-            userMenu(username);
+        	
+            switch (pilihan) {
+            	
+                case 1: 
+				tampilkanDataTempat(); 
+				break;
+				
+                case 2: 
+				tambahPenyewa(); 
+				break;
+				
+                case 3: 
+				lihatRukoKosong(); 
+				break;
+				
+                case 4: 
+				laporanPembayaranPenyewa(); 
+				break;
+				
+                case 5: 
+				updateDataPenyewa(); 
+				break;
+				
+                case 6: 
+				reminderPembayaran(); 
+				break;
+				
+				case 7: 
+				tinjauLaporanAdmin(); 
+				break;
+				
+				case 8: 
+				cariPenyewa(); 
+				break;
+				
+				case 5: 
+				penyewaBelumBayarBulanIni(); 
+				break;
+				
+                case 0: 
+				cout << "Terima kasih!\n"; 
+				break;
+				
+                default: 
+				cout << "Pilihan tidak valid.\n";
+				
+            }
+        } else {
+            switch (pilihan) {
+            	
+                case 1: 
+				tampilkanDataTempat(); 
+				break;
+				
+                case 2: 
+				bayarSewa(username); 
+				break;
+				
+                case 3: 
+				riwayatPembayaran(username); 
+				break;
+				
+				case 4: 
+				sewaTempatPengguna(username); 
+				break;
+				
+				case 5: 
+				kirimLaporan(username); 
+				break;
+				
+				case 6: 
+				lihatBalasanLaporan(username); 
+				break;
+				
+                case 0: 
+				cout << "Terima kasih!\n"; 
+				break;
+				
+                default: 
+				cout << "Pilihan tidak valid.\n";
+				
+            }
         }
-    }
+    } 
+	while (pilihan != 0);
 
     return 0;
 }
