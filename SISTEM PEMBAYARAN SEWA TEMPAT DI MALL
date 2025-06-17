@@ -8,6 +8,8 @@
 
 using namespace std;
 
+//Delicia
+
 unordered_map<string, string> adminAccounts = {
 	
     {"admin1", "adminpass"},
@@ -267,6 +269,8 @@ void simpanStrukPembayaran(const Penyewa& p, const string& bulan, const string& 
 	file.close();
 }
 
+//Daffa
+
 void bayarSewa(string username) {
 	cout << "\n--- Pembayaran Sewa ---\n";
 	
@@ -427,7 +431,6 @@ void updateDataPenyewa() {
             if (!input.empty()) {
                 int lantaiBaru = stoi(input);
 
-                // Set tempat lama jadi kosong
                 for (auto& t : dataTempat) {
                 	
                     if (t.nomorKios == p.nomorKios && t.lantai == p.lantai) {
@@ -573,7 +576,7 @@ void sewaTempatPengguna(const string& username) {
     cout << "Selamat! Anda berhasil menyewa kios nomor " << kiosPilih << " di lantai " << lantaiPilih << ".\n";
     pause();
 }
-
+//Helmi
 struct Laporan {
 	
     string pengirim;
@@ -665,78 +668,70 @@ void lihatBalasanLaporan(const string& username) {
     pause();
 }
 
-void cariPenyewa() {
+void sortingPenyewaSelection() {
 	
-    cout << "\n--- Cari Penyewa ---\n";
-    cout << "Cari berdasarkan:\n";
-    cout << "1. Nama Penyewa\n";
-    cout << "2. Brand\n";
-    cout << "3. Nomor Kios\n";
-    cout << "Pilihan: ";
-    int opsi;
-    cin >> opsi;
-    cin.ignore();
+    cout << "\n--- Sorting Data Penyewa (Selection Sort Berdasarkan Nama) ---\n";
 
-    bool ditemukan = false;
+    vector<Penyewa> penyewaSort = dataPenyewa;
 
-    if (opsi == 1) {
-        string nama;
-        
-        cout << "Masukkan nama penyewa: ";
-        getline(cin, nama);
-        
-        for (const auto& p : dataPenyewa) {
+    int n = penyewaSort.size();
+    for (int i = 0; i < n - 1; i++) {
+    	
+        int minIndex = i;
+        for (int j = i + 1; j < n; j++) {
         	
-            if (p.nama == nama) {
+            if (penyewaSort[j].nama < penyewaSort[minIndex].nama) {
             	
-                cout << "\nNama     : " << p.nama << "\nBrand    : " << p.brand
-                     << "\nNo. HP   : " << p.noHp << "\nLantai   : " << p.lantai
-                     << "\nKios     : " << p.nomorKios << "\nTanggal Mulai: " << p.tanggalMulai << endl;
-                ditemukan = true;
+                minIndex = j;
             }
         }
-    } else if (opsi == 2) {
-    	
-        string brand;
-        
-        cout << "Masukkan nama brand: ";
-        getline(cin, brand);
-        for (const auto& p : dataPenyewa) {
-            if (p.brand == brand) {
-                cout << "\nNama     : " << p.nama << "\nBrand    : " << p.brand<< "\nNo. HP   : " << p.noHp << "\nLantai   : " << p.lantai<< "\nKios     : " << p.nomorKios << "\nTanggal Mulai: " << p.tanggalMulai << endl;
-                ditemukan = true;
-            }
-        }
-    } else if (opsi == 3) {
-    	
-        int nomor;
-        
-        cout << "Masukkan nomor kios: ";
-        cin >> nomor;
-        
-        for (const auto& p : dataPenyewa) {
+        if (minIndex != i) {
         	
-            if (p.nomorKios == nomor) {
-            	
-                cout << "\nNama     : " << p.nama << "\nBrand    : " << p.brand
-                     << "\nNo. HP   : " << p.noHp << "\nLantai   : " << p.lantai
-                     << "\nKios     : " << p.nomorKios << "\nTanggal Mulai: " << p.tanggalMulai << endl;
-                ditemukan = true;
-            }
+            swap(penyewaSort[i], penyewaSort[minIndex]);
         }
-    } else {
-    	
-        cout << "Pilihan tidak valid.\n";
-        return;
     }
 
+    cout << "\nHasil Sorting:\n";
+    for (const auto& p : penyewaSort) {
+    	
+        cout << "Nama     : " << p.nama << endl;
+        cout << "Brand    : " << p.brand << endl;
+        cout << "No HP    : " << p.noHp << endl;
+        cout << "Lantai   : " << p.lantai << endl;
+        cout << "Kios     : " << p.nomorKios << endl;
+        cout << "Tanggal Mulai: " << p.tanggalMulai << endl;
+        cout << "----------------------------------\n";
+    }
+
+    cout << "\nMasukkan nomor kios untuk mencari data penyewa: ";
+    int nomorCari;
+    cin >> nomorCari;
+    bool ditemukan = false;
+
+    for (const auto& p : penyewaSort) {
+    	
+        if (p.nomorKios == nomorCari) {
+        	
+            cout << "\nData penyewa ditemukan:\n";
+            cout << "Nama     : " << p.nama << endl;
+            cout << "Brand    : " << p.brand << endl;
+            cout << "No HP    : " << p.noHp << endl;
+            cout << "Lantai   : " << p.lantai << endl;
+            cout << "Kios     : " << p.nomorKios << endl;
+            cout << "Tanggal Mulai: " << p.tanggalMulai << endl;
+            cout << "----------------------------------\n";
+            ditemukan = true;
+            break;
+        }
+    }
     if (!ditemukan) {
     	
-        cout << "Data penyewa tidak ditemukan.\n";
+        cout << "\nPenyewa dengan nomor kios tersebut tidak ditemukan.\n";
     }
 
     pause();
 }
+
 
 string namaBulanTahunSekarang() {
 	
@@ -908,27 +903,27 @@ int main() {
         	
             switch (pilihan) {
             	
-				case 1: 
+                case 1: 
 					tampilkanDataTempat(); 
 					break;
 				
-  				 case 2: 
+                case 2: 
 					tambahPenyewa(); 
 					break;
 				
-  				 case 3: 
+                case 3: 
 					lihatRukoKosong(); 
 					break;
 				
-				 case 4: 
+                case 4: 
 					laporanPembayaranPenyewa(); 
 					break;
 				
-				 case 5: 
+                case 5: 
 					updateDataPenyewa(); 
 					break;
-
-				case 6: 
+				
+                case 6: 
 					reminderPembayaran(); 
 					break;
 				
@@ -937,7 +932,7 @@ int main() {
 					break;
 				
 				case 8: 
-					cariPenyewa(); 
+					sortingPenyewaSelection(); 
 					break;
 				
 				case 9: 
@@ -947,26 +942,26 @@ int main() {
 				case 10:
 					hapusPenyewa();
 					break;
-				case 0: 
+                case 0: 
 					cout << "Terima kasih!\n"; 
 					break;
 				
-				default: 
+                default: 
 					cout << "Pilihan tidak valid.\n";
 				
             }
         } else {
             switch (pilihan) {
             	
-                		case 1: 
+                case 1: 
 					tampilkanDataTempat(); 
 					break;
 				
-                		case 2: 
+                case 2: 
 					bayarSewa(username); 
 					break;
 				
-                		case 3: 
+                case 3: 
 					riwayatPembayaran(username); 
 					break;
 				
@@ -991,11 +986,11 @@ int main() {
 					menuProfilUser(username);
 					break;
 						
-                		case 0: 
+                case 0: 
 					cout << "Terima kasih!\n"; 
 					break;
 				
-                		default: 
+                default: 
 					cout << "Pilihan tidak valid.\n";
 				
             }
