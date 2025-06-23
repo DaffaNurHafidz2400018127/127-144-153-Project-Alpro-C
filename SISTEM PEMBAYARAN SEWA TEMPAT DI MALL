@@ -77,6 +77,11 @@ void inisialisasiTempat() {
     dataPenyewa.push_back({"Doni", "0811333555", "DoniElectro", dataTempat[60].nomorKios, dataTempat[60].lantai, "1 Januari 2025", {"Januari 2025"}, {{"Januari 2025", "2025-01-01"}}});
 }
 
+bool comparePenyewa(const Penyewa& a, const Penyewa& b) {
+    return a.nama < b.nama;
+}
+
+
 bool sudahDibayar(const Penyewa& penyewa, const string& bulan) {
 	
     for (const auto& b : penyewa.bulanDibayar) {
@@ -84,6 +89,25 @@ bool sudahDibayar(const Penyewa& penyewa, const string& bulan) {
     }
     return false;
 }
+
+bool comparePenyewaByNama(const Penyewa& a, const Penyewa& b) {
+    return a.nama < b.nama;
+}
+
+int binarySearchPenyewa(const vector<Penyewa>& penyewaList, const string& namaCari) {
+    int low = 0, high = penyewaList.size() - 1;
+    while (low <= high) {
+        int mid = (low + high) / 2;
+        if (penyewaList[mid].nama == namaCari)
+            return mid;
+        else if (penyewaList[mid].nama < namaCari)
+            low = mid + 1;
+        else
+            high = mid - 1;
+    }
+    return -1;
+}
+
 
 void catatLogLogin(const string& username, const string& role);
 string login(string& role) {
@@ -401,16 +425,19 @@ void laporanPembayaranPenyewa() {
 }
 
 void updateDataPenyewa() {
-	
     cout << "\n--- Update Data Penyewa ---\n";
     cin.ignore();
     cout << "Masukkan nama penyewa yang ingin diupdate: ";
     string namaCari;
     getline(cin, namaCari);
 
-    for (auto& p : dataPenyewa) {
-    	
-        if (p.nama == namaCari) {
+    bool ditemukan = false;
+
+    for (int i = 0; i < dataPenyewa.size(); ++i) {
+        if (dataPenyewa[i].nama == namaCari) {
+            ditemukan = true;
+
+            Penyewa& p = dataPenyewa[i];
             cout << "Data ditemukan. Isi data baru (kosongkan jika tidak ingin diubah):\n";
 
             cout << "Nama (" << p.nama << "): ";
@@ -431,48 +458,50 @@ void updateDataPenyewa() {
             if (!input.empty()) {
                 int lantaiBaru = stoi(input);
 
-                for (auto& t : dataTempat) {
-                	
-                    if (t.nomorKios == p.nomorKios && t.lantai == p.lantai) {
-                        t.disewa = false;
+                // Kosongkan kios lama
+                for (int j = 0; j < 65; ++j) {
+                    if (dataTempat[j].nomorKios == p.nomorKios && dataTempat[j].lantai == p.lantai) {
+                        dataTempat[j].disewa = false;
                         break;
                     }
                 }
 
-                // Tampilkan kios kosong di lantai baru
                 cout << "Nomor kios yang tersedia di lantai " << lantaiBaru << ": ";
-                for (const auto& t : dataTempat) {
-                	
-                    if (t.lantai == lantaiBaru && !t.disewa) cout << t.nomorKios << " ";
+                for (int j = 0; j < 65; ++j) {
+                    if (dataTempat[j].lantai == lantaiBaru && !dataTempat[j].disewa) {
+                        cout << dataTempat[j].nomorKios << " ";
+                    }
                 }
-                
+
                 cout << "\nPilih nomor kios baru: ";
                 string kiosInput;
                 getline(cin, kiosInput);
                 int kiosBaru = stoi(kiosInput);
 
-                // Update kios dan lantai baru, set tempat disewa
-                for (auto& t : dataTempat) {
-                	
-                    if (t.nomorKios == kiosBaru && t.lantai == lantaiBaru) {
-                    	
-                        t.disewa = true;
+                for (int j = 0; j < 65; ++j) {
+                    if (dataTempat[j].nomorKios == kiosBaru && dataTempat[j].lantai == lantaiBaru) {
+                        dataTempat[j].disewa = true;
                         break;
                     }
                 }
+
                 p.lantai = lantaiBaru;
                 p.nomorKios = kiosBaru;
             }
 
             cout << "Data penyewa berhasil diupdate.\n";
-            pause();
-            return;
+            break;
         }
     }
-    cout << "Data penyewa tidak ditemukan.\n";
+
+    if (!ditemukan) {
+        cout << "Data penyewa tidak ditemukan.\n";
+    }
+
     pause();
-    
 }
+
+
 
 void reminderPembayaran() {
 	
@@ -770,36 +799,37 @@ void penyewaBelumBayarBulanIni() {
 }
 
 void hapusPenyewa() {
-	
     cout << "\n--- Hapus Data Penyewa ---\n";
     cin.ignore();
     cout << "Masukkan nama penyewa yang ingin dihapus: ";
     string namaHapus;
     getline(cin, namaHapus);
 
-    for (size_t i = 0; i < dataPenyewa.size(); ++i) {
-    	
+    bool ditemukan = false;
+    for (int i = 0; i < dataPenyewa.size(); ++i) {
         if (dataPenyewa[i].nama == namaHapus) {
-        	
-            for (auto& t : dataTempat) {
-            	
-                if (t.nomorKios == dataPenyewa[i].nomorKios && t.lantai == dataPenyewa[i].lantai) {
-                	
-                    t.disewa = false;
+            // Kosongkan tempat
+            for (int j = 0; j < 65; ++j) {
+                if (dataTempat[j].nomorKios == dataPenyewa[i].nomorKios &&
+                    dataTempat[j].lantai == dataPenyewa[i].lantai) {
+                    dataTempat[j].disewa = false;
                     break;
                 }
             }
-
             dataPenyewa.erase(dataPenyewa.begin() + i);
             cout << "Data penyewa berhasil dihapus.\n";
-            pause();
-            return;
+            ditemukan = true;
+            break;
         }
     }
 
-    cout << "Data penyewa tidak ditemukan.\n";
+    if (!ditemukan) {
+        cout << "Data penyewa tidak ditemukan.\n";
+    }
+
     pause();
 }
+
 
 void menuProfilUser(const string& username) {
 	
@@ -858,6 +888,35 @@ void menuProfilUser(const string& username) {
     }
 }
 
+void searchPenyewaByNama() {
+    cout << "\n--- Cari Data Penyewa Berdasarkan Nama ---\n";
+    cin.ignore();
+    cout << "Masukkan nama penyewa yang ingin dicari: ";
+    string namaCari;
+    getline(cin, namaCari);
+
+    bool ditemukan = false;
+    for (int i = 0; i < dataPenyewa.size(); ++i) {
+        if (dataPenyewa[i].nama == namaCari) {
+            Penyewa& p = dataPenyewa[i];
+            cout << "\nData penyewa ditemukan:\n";
+            cout << "Nama  : " << p.nama << endl;
+            cout << "No HP : " << p.noHp << endl;
+            cout << "Brand : " << p.brand << endl;
+            cout << "Lantai: " << p.lantai << ", Kios: " << p.nomorKios << endl;
+            cout << "Tanggal Mulai: " << p.tanggalMulai << endl;
+            ditemukan = true;
+            break;
+        }
+    }
+
+    if (!ditemukan) {
+        cout << "Data penyewa tidak ditemukan.\n";
+    }
+
+    pause();
+}
+
 
 int main() {
 	
@@ -881,6 +940,7 @@ int main() {
             cout << "8.  Cari Data Penyewa\n";
             cout << "9.  Lihat Penyewa Belum Bayar Bulan Ini\n";
             cout << "10. Hapus data penyewa\n";
+            cout << "11. Search Penyewa\n";//workshop TP
             cout << "0.  Keluar\n";
             
         } else {
@@ -942,6 +1002,11 @@ int main() {
 				case 10:
 					hapusPenyewa();
 					break;
+					
+				case 11:
+					searchPenyewaByNama();
+					break;
+						
                 case 0: 
 					cout << "Terima kasih!\n"; 
 					break;
