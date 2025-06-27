@@ -424,6 +424,7 @@ void laporanPembayaranPenyewa() {
     pause();
 }
 
+//Linear search update data penyewa [DELICIA RISA HIBATULLAH 144 C]
 void updateDataPenyewa() {
     cout << "\n--- Update Data Penyewa ---\n";
     cin.ignore();
@@ -798,6 +799,7 @@ void penyewaBelumBayarBulanIni() {
     pause();
 }
 
+//linear search hapus penyewa [M HELMI MUSTOFA 153 C]
 void hapusPenyewa() {
     cout << "\n--- Hapus Data Penyewa ---\n";
     cin.ignore();
@@ -900,11 +902,12 @@ void searchPenyewaByNama() {
         if (dataPenyewa[i].nama == namaCari) {
             Penyewa& p = dataPenyewa[i];
             cout << "\nData penyewa ditemukan:\n";
-            cout << "Nama  : " << p.nama << endl;
-            cout << "No HP : " << p.noHp << endl;
-            cout << "Brand : " << p.brand << endl;
-            cout << "Lantai: " << p.lantai << ", Kios: " << p.nomorKios << endl;
-            cout << "Tanggal Mulai: " << p.tanggalMulai << endl;
+            cout << "Nama\t\t: " << p.nama << endl;
+            cout << "No HP\t\t: " << p.noHp << endl;
+            cout << "Brand\t\t: " << p.brand << endl;
+            cout << "Lantai\t\t: " << p.lantai << endl;
+			cout << "Kios\t\t: " << p.nomorKios << endl;
+            cout << "Tanggal Mulai\t: " << p.tanggalMulai << endl;
             ditemukan = true;
             break;
         }
@@ -912,6 +915,44 @@ void searchPenyewaByNama() {
 
     if (!ditemukan) {
         cout << "Data penyewa tidak ditemukan.\n";
+    }
+
+    pause();
+}
+
+// Binary Search by Nama Penyewa untuk cari yang belum bayar bulan ini [DAFFA NUR HAFIDZ 127 C]
+void cariPenyewaJatuhTempo(const string& bulanCek) {
+    vector<Penyewa> penyewaBelumBayar;
+
+    for (int i = 0; i < dataPenyewa.size(); ++i) {
+        if (!sudahDibayar(dataPenyewa[i], bulanCek)) {
+            penyewaBelumBayar.push_back(dataPenyewa[i]);
+        }
+    }
+
+    // Urutkan nama pakai bubble sort (biar compatible dengan Dev-C++)
+    for (int i = 0; i < penyewaBelumBayar.size() - 1; ++i) {
+        for (int j = 0; j < penyewaBelumBayar.size() - i - 1; ++j) {
+            if (penyewaBelumBayar[j].nama > penyewaBelumBayar[j + 1].nama) {
+                Penyewa temp = penyewaBelumBayar[j];
+                penyewaBelumBayar[j] = penyewaBelumBayar[j + 1];
+                penyewaBelumBayar[j + 1] = temp;
+            }
+        }
+    }
+
+    cout << "\n--- Daftar Penyewa yang Belum Bayar Bulan " << bulanCek << " ---\n";
+
+    if (penyewaBelumBayar.empty()) {
+        cout << "Semua penyewa sudah membayar bulan ini.\n";
+    } else {
+        for (int i = 0; i < penyewaBelumBayar.size(); ++i) {
+            cout << "Nama     : " << penyewaBelumBayar[i].nama << endl;
+            cout << "Brand    : " << penyewaBelumBayar[i].brand << endl;
+            cout << "Lantai   : " << penyewaBelumBayar[i].lantai << ", Kios: " << penyewaBelumBayar[i].nomorKios << endl;
+            cout << "Tanggal Mulai Sewa: " << penyewaBelumBayar[i].tanggalMulai << endl;
+            cout << "----------------------------------------\n";
+        }
     }
 
     pause();
@@ -940,7 +981,8 @@ int main() {
             cout << "8.  Cari Data Penyewa\n";
             cout << "9.  Lihat Penyewa Belum Bayar Bulan Ini\n";
             cout << "10. Hapus data penyewa\n";
-            cout << "11. Search Penyewa\n";//workshop TP
+            cout << "11. Search Penyewa\n";
+            cout << "12. Cari penyewa belum bayar bulan ini\n";
             cout << "0.  Keluar\n";
             
         } else {
@@ -1006,7 +1048,16 @@ int main() {
 				case 11:
 					searchPenyewaByNama();
 					break;
-						
+				
+				case 12:
+			       	{
+					    string bulan;
+					    cout << "Masukkan bulan yang ingin dicek (cth: Juni 2025): ";
+					    getline(cin, bulan);
+					    cariPenyewaJatuhTempo(bulan);
+					}
+					break;
+		
                 case 0: 
 					cout << "Terima kasih!\n"; 
 					break;
